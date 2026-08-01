@@ -262,7 +262,7 @@ crypto.randomUUID   :   15,397,218 ids/s   (11.34× faster than exid)
 
 **What if my bundler loads both the ESM and CJS build?** Also fine: you get two independent generators, which is again the cross-generator case.
 
-**Why 24 characters?** It is the point where the space (~2¹²³·⁶) matches UUIDv4's entropy while staying short enough to read aloud. A `length` option is [planned](https://github.com/inventtech/exid/issues).
+**Why 24 characters?** It is the point where the space (~2¹²³·⁶) matches UUIDv4's entropy while staying short enough to read aloud. A `length` option is planned for 1.1 — see [#1](https://github.com/inventtech/exid/issues/1), which also covers why short bodies quietly weaken the guarantee.
 
 **Can I use uppercase or longer prefixes?** Prefixes are lowercase alphanumeric, up to 12 characters, starting with a letter. Keeping the whole id in one case makes it case-insensitively unique, which saves you from a class of database and URL bugs.
 
