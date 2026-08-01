@@ -54,7 +54,6 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "clean": "rm -rf dist",
     "lint": "biome check --error-on-warnings .",
     "lint:fix": "biome check --write .",
     "typecheck": "tsc -p tsconfig.json",
@@ -66,7 +65,7 @@
     "examples": "node examples/node-esm.mjs && node examples/node-cjs.cjs",
     "check:universal": "bun run scripts/check-universal.ts",
     "check:pack": "publint --strict && attw --pack .",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "node scripts/build.mjs"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",

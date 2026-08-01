@@ -45,7 +45,23 @@ jobs:
       - run: bun run check:pack
       - run: bun run test:pack
 
+      # Until npm auth is configured the publish would fail with EINVALIDNPMTOKEN and leave the
+      # repo permanently red, so skip it with a visible notice instead. Set the NPM_TOKEN secret,
+      # or the NPM_TRUSTED_PUBLISHING=true repo variable once npm Trusted Publishing (OIDC) is on.
+      - name: Check npm auth
+        id: npm_auth
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -n "$NPM_TOKEN" ] || [ "${{ vars.NPM_TRUSTED_PUBLISHING }}" = "true" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Release skipped::npm auth is not configured. Add the NPM_TOKEN secret, or set the NPM_TRUSTED_PUBLISHING=true repo variable after enabling npm Trusted Publishing."
+          fi
+
       - name: semantic-release
+        if: steps.npm_auth.outputs.ready == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Not needed when the package uses npm Trusted Publishing (OIDC); kept as the fallback.
