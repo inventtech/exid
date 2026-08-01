@@ -133,6 +133,8 @@ The body length, exported so you can size a database column: `prefix.length + 1 
 
 Advanced. Lets you inject a fixed identity so a generator becomes deterministic — useful for snapshot tests and golden fixtures. Never use a hard-coded state in production; the whole cross-process argument rests on that state being random.
 
+> **A state belongs to exactly one generator.** `createExidFromState` advances the counter in place and rekeys the object on wrap. Handing the same state — or a `structuredClone` of it — to a second generator makes both mint the **identical stream**, which is the one way to get guaranteed duplicates out of this package.
+
 ```ts
 import { createExidFromState, type ExidState } from 'exid';
 

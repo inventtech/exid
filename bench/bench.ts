@@ -40,6 +40,10 @@ if (import.meta.main) {
   ];
 
   const results = contenders.map(([label, fn]) => [label, bench(fn, n)] as const);
+
+  // The mint loop above contains ZERO crypto calls — entropy is consumed only when a generator
+  // is constructed — so it cannot measure the cost of the CSPRNG. This does.
+  const constructionRate = bench(() => createExid('svy')(), 200_000);
   const exidRate = results.find(([label]) => label === 'exid')?.[1] ?? 1;
   const width = Math.max(...results.map(([label]) => label.length));
 
@@ -49,4 +53,11 @@ if (import.meta.main) {
     const relative = label === 'exid' ? '' : `  (${ratio >= 1 ? `${ratio.toFixed(2)}× faster` : `${(1 / ratio).toFixed(2)}× slower`} than exid)`;
     console.log(`${label.padEnd(width)} : ${Math.round(rate).toLocaleString().padStart(12)} ids/s${relative}`);
   }
+
+  console.log(`\nGenerator construction (1 CSPRNG boot + 1 mint each):`);
+  console.log(`${'createExid() + mint'.padEnd(width)} : ${Math.round(constructionRate).toLocaleString().padStart(12)} /s`);
+  console.log(
+    `\nConstructing per call costs only ${(exidRate / constructionRate).toFixed(1)}× throughput, so speed is NOT the reason\n` +
+      'to hoist the generator: a fresh generator per id is CSPRNG-grade, never structural.',
+  );
 }
