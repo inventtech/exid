@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint · Typecheck · Test · Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run typecheck
+      - run: bun run test:coverage
+      - run: bun run build
+      - run: bun run check:universal
+      - run: bun run check:pack
+      - run: bun run test:pack
+      - run: bun run examples
+      - name: Pack tarball for the runtime matrix
+        run: npm pack --silent
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-tarball
+          path: exid-*.tgz
+          retention-days: 1
+
+  node-matrix:
+    name: Node ${{ matrix.node }}
+    needs: quality
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['18', '20', '22', '24']
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: package-tarball
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install the tarball into a throwaway project
+        run: |
+          mkdir -p smoke && cd smoke
+          npm init -y >/dev/null
+          npm install --silent --no-audit --no-fund ../exid-*.tgz
+      - name: Mint via import and require
+        working-directory: smoke
+        run: |
+          node --input-type=module -e "
+            import { createExid } from 'exid';
+            const id = createExid('usr')();
+            if (!/^usr_[a-z][a-z0-9]{23}$/.test(id)) throw new Error('bad esm id: ' + id);
+            console.log('esm ok', id);
+          "
+          node --input-type=commonjs -e "
+            const { createExid } = require('exid');
+            const id = createExid('usr')();
+            if (!/^usr_[a-z][a-z0-9]{23}$/.test(id)) throw new Error('bad cjs id: ' + id);
+            console.log('cjs ok', id);
+          "
+
+  edge-runtimes:
+    name: ${{ matrix.runtime }}
+    needs: quality
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: [bun, deno]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - if: matrix.runtime == 'deno'
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Mint an id on ${{ matrix.runtime }}
+        run: |
+          cat > smoke.mjs <<'EOF'
+          import { createExid } from './dist/esm/index.js';
+          const id = createExid('usr')();
+          if (!/^usr_[a-z][a-z0-9]{23}$/.test(id)) throw new Error('bad id: ' + id);
+          console.log('${{ matrix.runtime }} ok', id);
+          EOF
+          if [ "${{ matrix.runtime }}" = "deno" ]; then deno run --quiet smoke.mjs; else bun smoke.mjs; fi

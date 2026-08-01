@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    // TypeScript 7 removed `moduleResolution: node10`, and node16/nodenext both reject a
+    // `commonjs` module — `bundler` is the only resolution that emits CJS cleanly.
+    "module": "commonjs",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": false,
+    "outDir": "dist/cjs"
+  }
+}

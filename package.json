@@ -1,0 +1,82 @@
+{
+  "name": "exid",
+  "version": "0.0.0-managed",
+  "description": "Collision-free, cuid2-looking public ids with zero database dependency. Same-generator collisions are structurally impossible, not merely improbable.",
+  "keywords": [
+    "id",
+    "uuid",
+    "guid",
+    "nanoid",
+    "cuid",
+    "cuid2",
+    "ulid",
+    "unique-id",
+    "id-generator",
+    "public-id",
+    "collision-free",
+    "typescript",
+    "edge",
+    "zero-dependency"
+  ],
+  "license": "MIT",
+  "author": "Invent Technology",
+  "homepage": "https://github.com/inventtech/exid#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inventtech/exid.git"
+  },
+  "bugs": {
+    "url": "https://github.com/inventtech/exid/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "clean": "rm -rf dist",
+    "lint": "biome check --error-on-warnings .",
+    "lint:fix": "biome check --write .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "bench": "bun bench/bench.ts",
+    "test:pack": "bun run scripts/pack-smoke.ts",
+    "examples": "node examples/node-esm.mjs && node examples/node-cjs.cjs",
+    "check:universal": "bun run scripts/check-universal.ts",
+    "check:pack": "publint --strict && attw --pack .",
+    "prepublishOnly": "bun run build"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
+    "@biomejs/biome": "2.4.16",
+    "@paralleldrive/cuid2": "2.2.2",
+    "@types/node": "26.1.1",
+    "@vitest/coverage-v8": "4.1.10",
+    "nanoid": "5.1.7",
+    "publint": "0.3.22",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  }
+}
